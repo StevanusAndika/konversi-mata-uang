@@ -126,50 +126,54 @@ body.dark-mode {
 
 </style>
 
+<!-- Script JavaScript untuk logika aplikasi -->
 <script>
-    //fungsi untuk konversi
-    //meendapatkan nilai dari html element
+    // Fungsi untuk melakukan konversi
+    function convert() {
+        // Mendapatkan nilai dari input dan select
+        const amount = parseFloat(document.getElementById('amount').value);
+        const fromCurrency = document.getElementById('fromCurrency').value;
+        const toCurrency = document.getElementById('toCurrency').value;
 
-function convert() {
-    const amount = parseFloat(document.getElementById('amount').value);
-    const fromCurrency = document.getElementById('fromCurrency').value;
-    const toCurrency = document.getElementById('toCurrency').value;
-      //jika inputan tidak valid,munculkan notif
-    if (isNaN(amount)) {
-        alert('Please enter a valid amount.');
-        return;
-    }
-    //get API Changer lalu respons ke json
-    fetch(https://api.exchangerate-api.com/v4/latest/${fromCurrency})
-        .then(response => response.json())
-        //ubah ke nilai tukar
-        //kalikan dengan nilai tukar dari mata uang
-        //tampilkan ke mata uang pada element html
-        //jika gagal,munculkan notif
-        .then(data => {
-            const exchangeRate = data.rates[toCurrency];
-            if (exchangeRate) {
-                const convertedAmount = amount * exchangeRate;
-                document.getElementById('result').innerHTML = ${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency};
-            } else {
+        // Validasi inputan
+        if (isNaN(amount)) {
+            alert('Masukkan jumlah yang valid.');
+            return;
+        }
+
+        // Mendapatkan data nilai tukar dari API
+        fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`)
+            .then(response => response.json())
+            .then(data => {
+                let exchangeRate;
+                // Periksa jika mata uang asal adalah BTC
+                if (fromCurrency === 'BTC') {
+                    exchangeRate = 1; // Nilai tukar BTC diatur menjadi 1
+                } else {
+                    exchangeRate = data.rates[toCurrency];
+                }
+
+                // Validasi nilai tukar
+                if (exchangeRate) {
+                    const convertedAmount = amount * exchangeRate;
+                    // Menampilkan hasil konversi
+                    document.getElementById('result').innerHTML = `${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`;
+                } else {
+                    alert('Error fetching exchange rate. Please try again later.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 alert('Error fetching exchange rate. Please try again later.');
-            }
+            });
+    }
 
-        })
-        //tangkap jika error nilai tukar
-        // munculkan notif 
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error fetching exchange rate. Please try again later.');
-        });
-}
-// Tambahkan fungsi untuk toggle mode
-function toggleMode() {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    body.classList.toggle('light-mode');
-}
-
-</script>
+    // Fungsi untuk toggle mode (Dark Mode dan Light Mode)
+    function toggleMode() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        body.classList.toggle('light-mode');
+    }
+    </script>
 </body>
 </html>
