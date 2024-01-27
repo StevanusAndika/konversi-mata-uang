@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+   
     <title>Konversi Uang </title>
 </head>
 <body>
@@ -35,10 +35,15 @@
             <option value="BTC">BTC</option>
         </select>
     </div>
-    <button onclick="convert()">Ubah</button>
+    <button onclick="convert()">Ubah<i class="bi bi-check-square"></i></button>
+      
+    </button>
+<div id="result"></div>
+
     <div id="result"></div>
 </div>
 <style>
+  @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
     body {
     font-family: 'Arial', sans-serif;
     margin: 0;
@@ -84,7 +89,7 @@ button {
 }
 
 button {
-    background-color: #4caf50;
+    background-color: red;
     color: #fff;
     cursor: pointer;
 }
@@ -126,33 +131,58 @@ body.dark-mode {
 
 </style>
 
-<!-- Script JavaScript untuk logika aplikasi -->
 <script>
-    // Fungsi untuk melakukan konversi
+
+// API untuk bitcoin
+const bitcoinApiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
+
+
+    //fungsi  convert
+    //amount akan dibuat dalam bentuk pembulatan
     function convert() {
-        // Mendapatkan nilai dari input dan select
-        const amount = parseFloat(document.getElementById('amount').value);
-        const fromCurrency = document.getElementById('fromCurrency').value;
-        const toCurrency = document.getElementById('toCurrency').value;
+    // Mendapatkan nilai dari input dan select
+    const amount = parseFloat(document.getElementById('amount').value);
+    const fromCurrency = document.getElementById('fromCurrency').value;
+    const toCurrency = document.getElementById('toCurrency').value;
 
-        // Validasi inputan
-        if (isNaN(amount)) {
-            alert('Masukkan jumlah yang valid.');
-            return;
-        }
+    // Validasi inputan
+    if (isNaN(amount)) {
+        alert('Masukkan jumlah yang valid.');
+        return;
+    }
 
-        // Mendapatkan data nilai tukar dari API
-        fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`)
+    let exchangeRate;
+      //variabel ubah nilai mata uang
+
+    // Periksa jika mata uang asal adalah BTC
+    if (fromCurrency === 'BTC') {
+        // Fetch Bitcoin exchange rate from CoinGecko API
+        fetch(bitcoinApiUrl)
             .then(response => response.json())
             .then(data => {
-                let exchangeRate;
-                // Periksa jika mata uang asal adalah BTC
-                if (fromCurrency === 'BTC') {
-                    exchangeRate = 1; // Nilai tukar BTC diatur menjadi 1
-                } else {
-                    exchangeRate = data.rates[toCurrency];
-                }
+                exchangeRate = data.bitcoin.usd;
 
+                // Validasi nilai tukar
+                if (exchangeRate) {
+                    const convertedAmount = amount * exchangeRate;
+                    // Menampilkan hasil konversi
+                    document.getElementById('result').innerHTML = `${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`;
+                } else {
+                    alert('Error fetching Bitcoin exchange rate. Please try again later.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error fetching Bitcoin exchange rate. Please try again later.');
+            });
+    } else {
+        // Fetching data dari API
+        fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`)
+      //lalu buat hasil dengan JSON
+            .then(response => response.json())
+            .then(data => {
+                exchangeRate = data.rates[toCurrency];
+      
                 // Validasi nilai tukar
                 if (exchangeRate) {
                     const convertedAmount = amount * exchangeRate;
@@ -162,11 +192,14 @@ body.dark-mode {
                     alert('Error fetching exchange rate. Please try again later.');
                 }
             })
+      //jika error,buat notifikasi
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error fetching exchange rate. Please try again later.');
             });
     }
+}
+
 
     // Fungsi untuk toggle mode (Dark Mode dan Light Mode)
     function toggleMode() {
